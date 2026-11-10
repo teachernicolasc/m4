@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aventura Matemática 1° Básico</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts para público infantil -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      font-family: 'Fredoka', cursive, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background: linear-gradient(180deg, #bae6fd 0%, #fef08a 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animaciones Divertidas */
+    .bounce-pop {
+      animation: bouncePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes bouncePop {
+      0% { transform: scale(0.4); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .float-slow {
+      animation: floatSlow 3s ease-in-out infinite alternate;
+    }
+    @keyframes floatSlow {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-10px) rotate(3deg); }
+    }
+
+    .spin-star {
+      animation: spinStar 4s linear infinite;
+    }
+    @keyframes spinStar {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .shake-err {
+      animation: shakeErr 0.4s ease-in-out;
+    }
+    @keyframes shakeErr {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-12px); }
+      75% { transform: translateX(12px); }
+    }
+
+    /* Botones Gigantes Infantiles */
+    .btn-child {
+      box-shadow: 0 8px 0 rgba(0,0,0,0.18);
+      transition: all 0.1s ease;
+    }
+    .btn-child:active {
+      transform: translateY(6px);
+      box-shadow: 0 2px 0 rgba(0,0,0,0.18);
+    }
+
+    /* Canvas para celebraciones */
+    #fx-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 99;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between p-3 md:p-6">
+
+  <!-- Canvas de Confeti -->
+  <canvas id="fx-canvas"></canvas>
+
+  <!-- BARRITA DE PROGRESO SUPERIOR -->
+  <header class="max-w-4xl w-full mx-auto bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-xl border-4 border-white flex justify-between items-center z-10">
+    <!-- Nivel Actual -->
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 bg-purple-500 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-md border-b-4 border-purple-700">
+        <span id="level-num">1</span>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-purple-400 uppercase tracking-wider">Nivel</p>
+        <h2 id="level-name" class="text-xl font-black text-purple-800">Componer</h2>
+      </div>
+    </div>
+
+    <!-- Indicador de Voz, Racha y Estrellas -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Indicador de Racha 🔥 -->
+      <div id="streak-box" class="hidden bg-orange-100 border-2 border-orange-400 px-3 py-1.5 rounded-2xl flex items-center gap-1 shadow-inner">
+        <span class="text-2xl animate-bounce">🔥</span>
+        <span id="streak-count" class="text-xl font-black text-orange-600">0</span>
+      </div>
+
+      <button onclick="speakInstruction()" class="bg-amber-400 hover:bg-amber-300 active:scale-95 text-amber-950 p-3 rounded-2xl border-b-4 border-amber-600 shadow-lg text-2xl flex items-center gap-2">
+        🔊 <span class="text-sm font-bold hidden sm:inline">Escuchar</span>
+      </button>
+
+      <div class="bg-amber-100 border-2 border-amber-400 px-4 py-2 rounded-2xl flex items-center gap-2 shadow-inner">
+        <span class="text-3xl spin-star">⭐</span>
+        <span id="star-count" class="text-2xl font-black text-amber-600">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- BARRA DE PROGRESO DE 50 EJERCICIOS -->
+  <div class="max-w-4xl w-full mx-auto mt-4 px-2">
+    <div class="flex justify-between items-center text-sm font-bold text-sky-900 mb-1">
+      <span id="difficulty-badge" class="bg-emerald-200 text-emerald-900 px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider">Desafío Inicial</span>
+      <span id="progress-text">Ejercicio 1 de 50</span>
+    </div>
+    <div class="w-full bg-white/70 h-4 rounded-full border-2 border-white overflow-hidden shadow-inner">
+      <div id="progress-bar" class="bg-gradient-to-r from-emerald-400 via-sky-500 to-purple-500 h-full w-[2%] transition-all duration-300"></div>
+    </div>
+  </div>
+
+  <!-- CONTENEDOR PRINCIPAL DEL JUEGO -->
+  <main class="max-w-4xl w-full mx-auto my-auto py-4">
+
+    <!-- CONTENEDOR DE JUEGO PRINCIPAL -->
+    <section id="game-card" class="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border-8 border-sky-300 bounce-pop flex flex-col justify-between min-h-[460px] relative">
+      
+      <!-- INSTRUCCIÓN GIGANTE -->
+      <div class="text-center space-y-2 mb-4">
+        <h1 id="question-text" class="text-2xl sm:text-4xl font-black text-sky-900 leading-tight">
+          Cargando juego...
+        </h1>
+      </div>
+
+      <!-- ÁREA DE TRABAJO DIDÁCTICA (CAMBIA SEGÚN EL NIVEL) -->
+      <div id="workspace" class="flex-grow flex items-center justify-center my-4 py-2">
+        <!-- Inyección por JS -->
+      </div>
+
+      <!-- OPCIONES DE RESPUESTA GIGANTES -->
+      <div id="options-box" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
+        <!-- Inyección por JS -->
+      </div>
+
+    </section>
+
+    <!-- PANTALLA DE VICTORIA FINAL -->
+    <section id="victory-card" class="hidden bg-white rounded-3xl p-8 shadow-2xl border-8 border-amber-400 text-center bounce-pop space-y-6 max-w-2xl mx-auto">
+      <div class="text-8xl float-slow">🏆</div>
+      <div>
+        <h1 class="text-4xl sm:text-5xl font-black text-amber-500">¡FELICITACIONES!</h1>
+        <p class="text-xl font-bold text-slate-600 mt-2">¡Eres un Súper Campeón de las Matemáticas!</p>
+      </div>
+
+      <div class="bg-amber-50 border-4 border-amber-200 p-6 rounded-3xl flex justify-center items-center gap-4 max-w-sm mx-auto">
+        <span class="text-5xl">⭐</span>
+        <div class="text-left">
+          <p class="text-sm font-bold text-amber-700 uppercase">Estrellas Ganadas</p>
+          <p id="total-stars" class="text-4xl font-black text-amber-600">120</p>
+        </div>
+      </div>
+
+      <button onclick="resetGame()" class="btn-child w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black text-2xl py-5 rounded-3xl border-b-8 border-emerald-700 text-shadow">
+        🔄 JUGAR DE NUEVO
+      </button>
+    </section>
+
+  </main>
+
+  <!-- PIE DE PÁGINA SIMPLE -->
+  <footer class="text-center text-sm font-bold text-sky-800/60 py-2">
+    1° Básico • Ministerio de Educación Chile (OA 6, 7, 8, 9)
+  </footer>
+
+  <!-- LÓGICA DEL JUEGO -->
+  <script>
+    /* ==========================================================================
+       ESTADO DEL JUEGO (50 EJERCICIOS EXTENSOS E INTERCALADOS HASTA EL 20)
+       ========================================================================== */
+    const TOTAL_EXERCISES = 50;
+
+    // Secuencia intercalada de 50 ejercicios (OA 6, 7, 8, 9)
+    const exerciseSequence = Array.from({ length: TOTAL_EXERCISES }, (_, i) => (i % 4) + 1);
+
+    const state = {
+      currentIndex: 0,    // 0 a 49
+      stars: 0,
+      streak: 0,          // Racha de respuestas correctas
+      maxStreak: 0,
+      currentAnswer: null,
+      instructionText: ""
+    };
+
+    /* ==========================================================================
+       SONIDOS SINTÉTICOS (Web Audio API)
+       ========================================================================== */
+    let audioCtx = null;
+    function playSound(type) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
+
+      if (type === 'win') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now); // Do
+        osc.frequency.setValueAtTime(659.25, now + 0.1); // Mi
+        osc.frequency.setValueAtTime(783.99, now + 0.2); // Sol
+        osc.frequency.setValueAtTime(1046.50, now + 0.3); // Do alto
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
+      } else if (type === 'streak') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now); // Re
+        osc.frequency.setValueAtTime(880, now + 0.1); // La
+        osc.frequency.setValueAtTime(1174.66, now + 0.2); // Re alto
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.3);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+      } else if (type === 'tap') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(450, now);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.start(now); osc.stop(now + 0.08);
+      }
+    }
+
+    /* ==========================================================================
+       LECTOR DE VOZ PARA NIÑOS (Web Speech API)
+       ========================================================================== */
+    function speakInstruction() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Detener lecturas previas
+        const utterance = new SpeechSynthesisUtterance(state.instructionText);
+        utterance.lang = 'es-CL'; // Español de Chile / Latino
+        utterance.rate = 0.9;     // Hablar pausado
+        utterance.pitch = 1.1;    // Tono alegre
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    /* ==========================================================================
+       CONFETI ANIMADO EN CANVAS
+       ========================================================================== */
+    function triggerConfetti() {
+      const canvas = document.getElementById('fx-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = Array.from({ length: 50 }, () => ({
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        vx: (Math.random() - 0.5) * 14,
+        vy: (Math.random() - 0.7) * 14,
+        size: Math.random() * 10 + 6,
+        color: ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'][Math.floor(Math.random() * 5)]
+      }));
+
+      let frames = 0;
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.4;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        if (++frames < 60) requestAnimationFrame(render);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      render();
+    }
+
+    /* ==========================================================================
+       CARGADOR DE NIVELES
+       ========================================================================== */
+    function loadLevel() {
+      document.getElementById('level-num').innerText = state.level;
+      
+      if (state.level === 1) {
+        document.getElementById('level-name').innerText = "Componer Números";
+        setupOA6();
+      } else if (state.level === 2) {
+        document.getElementById('level-name').innerText = "Cálculo Mental";
+        setupOA7();
+      } else if (state.level === 3) {
+        document.getElementById('level-name').innerText = "Decenas y Unidades";
+        setupOA8();
+      } else if (state.level === 4) {
+        document.getElementById('level-name').innerText = "Marcos de 10";
+        setupOA9();
+      }
+
+      // Autoleer la instrucción para apoyar al estudiante
+      setTimeout(speakInstruction, 300);
+    }
+
+    /* --------------------------------------------------------------------------
+       NIVEL 1: OA 6 - Componer y Descomponer ("Juntemos Manzanas")
+       -------------------------------------------------------------------------- */
+    function setupOA6() {
+      const target = [5, 6, 7, 8, 10][state.subStep + Math.floor(Math.random() * 2)];
+      const part1 = Math.floor(Math.random() * (target - 1)) + 1;
+      const part2 = target - part1;
+
+      state.currentAnswer = target;
+      state.instructionText = `¿Cuántas manzanas hay en total si juntamos ${part1} y ${part2}?`;
+      document.getElementById('question-text').innerText = state.instructionText;
+
+      const apples1 = '🍎'.repeat(part1);
+      const apples2 = '🍎'.repeat(part2);
+
+      document.getElementById('workspace').innerHTML = `
+        <div class="flex items-center gap-4 sm:gap-8 bg-sky-50 p-6 rounded-3xl border-4 border-sky-200">
+          <div class="text-center">
+            <div class="text-3xl sm:text-4xl bg-white p-3 rounded-2xl shadow-md border-2 border-sky-300">${apples1}</div>
+            <span class="text-2xl font-black text-sky-800 mt-2 block">${part1}</span>
+          </div>
+          <span class="text-4xl font-black text-amber-500">+</span>
+          <div class="text-center">
+            <div class="text-3xl sm:text-4xl bg-white p-3 rounded-2xl shadow-md border-2 border-sky-300">${apples2}</div>
+            <span class="text-2xl font-black text-sky-800 mt-2 block">${part2}</span>
+          </div>
+        </div>
+      `;
+
+      renderOptions(generateOptions(target));
+    }
+
+    /* --------------------------------------------------------------------------
+       NIVEL 2: OA 7 - Cálculo Mental ("El Doble")
+       -------------------------------------------------------------------------- */
+    function setupOA7() {
+      const num = [2, 3, 4, 5, 6][state.subStep];
+      const target = num + num;
+
+      state.currentAnswer = target;
+      state.instructionText = `¿Cuánto es el doble de ${num}?`;
+      document.getElementById('question-text').innerText = state.instructionText;
+
+      document.getElementById('workspace').innerHTML = `
+        <div class="text-center space-y-4">
+          <div class="text-5xl sm:text-6xl font-black text-indigo-600 bg-indigo-50 p-6 rounded-3xl border-4 border-indigo-200 shadow-inner">
+            ${num} + ${num} = ❓
+          </div>
+          <p class="text-lg font-bold text-indigo-400">¡Suma el número dos veces!</p>
+        </div>
+      `;
+
+      renderOptions(generateOptions(target));
+    }
+
+    /* --------------------------------------------------------------------------
+       NIVEL 3: OA 8 - Decenas y Unidades ("Bloques Multibase")
+       -------------------------------------------------------------------------- */
+    function setupOA8() {
+      const units = [2, 4, 5, 7, 8][state.subStep];
+      const target = 10 + units;
+
+      state.currentAnswer = target;
+      state.instructionText = `¿Qué número forman 1 barra de 10 y ${units} cubitos sueltos?`;
+      document.getElementById('question-text').innerText = state.instructionText;
+
+      document.getElementById('workspace').innerHTML = `
+        <div class="flex items-end gap-6 bg-amber-50 p-6 rounded-3xl border-4 border-amber-200">
+          <!-- Decena (10) -->
+          <div class="flex flex-col items-center">
+            <div class="w-8 h-36 bg-emerald-500 rounded-lg border-2 border-emerald-700 grid grid-rows-10 p-0.5 gap-0.5 shadow-md">
+              ${'<div class="bg-emerald-300 rounded-sm"></div>'.repeat(10)}
+            </div>
+            <span class="text-xs font-black text-emerald-800 mt-2">1 Decena</span>
+          </div>
+
+          <span class="text-3xl font-black text-amber-500">+</span>
+
+          <!-- Unidades -->
+          <div class="flex flex-col items-center">
+            <div class="flex flex-wrap gap-1 max-w-[80px] justify-center items-end min-h-[144px]">
+              ${Array(units).fill(0).map(() => `<div class="w-6 h-6 bg-sky-400 border-2 border-sky-600 rounded-md shadow"></div>`).join('')}
+            </div>
+            <span class="text-xs font-black text-sky-800 mt-2">${units} Unidades</span>
+          </div>
+        </div>
+      `;
+
+      renderOptions(generateOptions(target));
+    }
+
+    /* --------------------------------------------------------------------------
+       NIVEL 4: OA 9 - Marco de 10 ("Marco Mágico")
+       -------------------------------------------------------------------------- */
+    function setupOA9() {
+      const initial = [6, 7, 8, 9][state.subStep];
+      const remove = Math.floor(Math.random() * 3) + 1;
+      const target = initial - remove;
+
+      state.currentAnswer = target;
+      state.instructionText = `Hay ${initial} fichas rojas y quitamos ${remove}. ¿Cuántas quedan?`;
+      document.getElementById('question-text').innerText = state.instructionText;
+
+      // Renderizar Marco de 10
+      const cells = Array(10).fill(0).map((_, i) => {
+        if (i < target) return '<div class="w-7 h-7 sm:w-9 sm:h-9 bg-rose-500 rounded-full shadow-md"></div>';
+        if (i < initial) return '<div class="w-7 h-7 sm:w-9 sm:h-9 bg-slate-300 rounded-full flex items-center justify-center text-xs font-black text-slate-500">❌</div>';
+        return '';
+      });
+
+      document.getElementById('workspace').innerHTML = `
+        <div class="flex flex-col items-center gap-4">
+          <div class="text-3xl font-black text-rose-600">${initial} - ${remove} = ❓</div>
+          <div class="grid grid-cols-5 gap-2 bg-slate-100 p-3 rounded-2xl border-4 border-slate-300 shadow-inner">
+            ${cells.map(c => `<div class="w-9 h-9 sm:w-11 sm:h-11 bg-white border-2 border-slate-200 rounded-xl flex items-center justify-center">${c}</div>`).join('')}
+          </div>
+        </div>
+      `;
+
+      renderOptions(generateOptions(target));
+    }
+
+    /* ==========================================================================
+       GENERADOR DE OPCIONES DE RESPUESTA
+       ========================================================================== */
+    function generateOptions(correct) {
+      const opts = new Set([correct]);
+      while (opts.size < 4) {
+        let fake = correct + (Math.floor(Math.random() * 5) - 2);
+        if (fake >= 0 && fake <= 20 && fake !== correct) opts.add(fake);
+        else opts.add(Math.floor(Math.random() * 15));
+      }
+      return Array.from(opts).sort(() => Math.random() - 0.5);
+    }
+
+    function renderOptions(optionsArr) {
+      const box = document.getElementById('options-box');
+      box.innerHTML = '';
+
+      const colors = [
+        'bg-amber-400 border-amber-600 text-amber-950',
+        'bg-emerald-400 border-emerald-600 text-emerald-950',
+        'bg-sky-400 border-sky-600 text-sky-950',
+        'bg-purple-400 border-purple-600 text-purple-950'
+      ];
+
+      optionsArr.forEach((val, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `btn-child ${colors[idx % colors.length]} font-black text-4xl sm:text-5xl py-4 sm:py-6 rounded-3xl border-b-8 active:border-b-0 flex justify-center items-center shadow-lg`;
+        btn.innerText = val;
+        btn.onclick = () => validateAnswer(val, btn);
+        box.appendChild(btn);
+      });
+    }
+
+    /* ==========================================================================
+       VALIDACIÓN DE RESPUESTA
+       ========================================================================== */
+    function validateAnswer(selectedVal, btnEl) {
+      playSound('tap');
+
+      if (selectedVal === state.currentAnswer) {
+        playSound('win');
+        triggerConfetti();
+
+        state.stars += 10;
+        document.getElementById('star-count').innerText = state.stars;
+
+        btnEl.classList.add('scale-110', 'ring-8', 'ring-emerald-300');
+
+        setTimeout(() => {
+          state.subStep++;
+          if (state.subStep >= state.maxSubSteps) {
+            state.subStep = 0;
+            state.level++;
+          }
+
+          if (state.level > 4) {
+            showVictoryScreen();
+          } else {
+            loadLevel();
+          }
+        }, 1000);
+
+      } else {
+        playSound('wrong');
+        btnEl.classList.add('shake-err', 'opacity-50');
+        setTimeout(() => btnEl.classList.remove('shake-err'), 400);
+      }
+    }
+
+    /* ==========================================================================
+       CARGADOR DE NIVELES / EJERCICIOS INTERCALADOS
+       ========================================================================== */
+    function loadLevel() {
+      const currentOA = exerciseSequence[state.currentIndex];
+      const exNum = state.currentIndex + 1;
+
+      // Actualizar Barra de Progreso
+      document.getElementById('level-num').innerText = exNum;
+      document.getElementById('progress-text').innerText = `Ejercicio ${exNum} de ${TOTAL_EXERCISES}`;
+      document.getElementById('progress-bar').style.width = `${(exNum / TOTAL_EXERCISES) * 100}%`;
+
+      // Badge de Dificultad Dinámica según avance
+      const badge = document.getElementById('difficulty-badge');
+      if (exNum <= 15) {
+        badge.innerText = "⭐ Dificultad Nivel 1 (0 a 10)";
+        badge.className = "bg-emerald-200 text-emerald-900 px-3 py-0.5 rounded-full text-xs font-black uppercase tracking-wider";
+      } else if (exNum <= 35) {
+        badge.innerText = "🔥 Dificultad Nivel 2 (Hasta 15)";
+        badge.className = "bg-amber-200 text-amber-900 px-3 py-0.5 rounded-full text-xs font-black uppercase tracking-wider";
+      } else {
+        badge.innerText = "🏆 Dificultad Gran Maestro (Hasta 20)";
+        badge.className = "bg-purple-200 text-purple-900 px-3 py-0.5 rounded-full text-xs font-black uppercase tracking-wider";
+      }
+
+      // Racha box update
+      const streakBox = document.getElementById('streak-box');
+      if (state.streak >= 2) {
+        streakBox.classList.remove('hidden');
+        document.getElementById('streak-count').innerText = state.streak;
+      } else {
+        streakBox.classList.add('hidden');
+      }
+
+      if (currentOA === 1) {
+        document.getElementById('level-name').innerText = "Componer / Descomponer (OA 6)";
+        setupOA6();
+      } else if (currentOA === 2) {
+        document.getElementById('level-name').innerText = "Cálculo Mental (OA 7)";
+        setupOA7();
+      } else if (currentOA === 3) {
+        document.getElementById('level-name').innerText = "Decenas y Unidades (OA 8)";
+        setupOA8();
+      } else if (currentOA === 4) {
+        document.getElementById('level-name').innerText = "Operaciones y Problemas (OA 9)";
+        setupOA9();
+      }
+
+      // Autoleer la instrucción para apoyar al estudiante
+      setTimeout(speakInstruction, 300);
+    }
+
+    /* --------------------------------------------------------------------------
+       NIVEL 1: OA 6 - Componer y Descomponer (Ampliación hasta 20)
+       -------------------------------------------------------------------------- */
+    function setupOA6() {
+      const mode = Math.random();
+      const exNum = state.currentIndex + 1;
+      
+      // Ajuste de rango numérico según avance
+      const maxVal = exNum <= 15 ? 10 : (exNum <= 35 ? 15 : 20);
+
+      if (mode < 0.5) {
+        // Composición con representaciones pictóricas
+        const icons = ['🍎', '⭐️', '🎈', '🚗', '🐱', '🐟', '⚽️', '🚀', '🍓', '🍪'];
+        const icon = icons[Math.floor(Math.random() * icons.length)];
+
+        const target = Math.floor(Math.random() * (maxVal - 4)) + 4;
+        const part1 = Math.floor(Math.random() * (target - 1)) + 1;
+        const part2 = target - part1;
+
+        state.currentAnswer = target;
+        state.instructionText = `¿Cuántos elementos hay en total si juntamos ${part1} y ${part2}?`;
+        document.getElementById('question-text').innerText = state.instructionText;
+
+        const items1 = icon.repeat(part1);
+        const items2 = icon.repeat(part2);
+
+        document.getElementById('workspace').innerHTML = `
+          <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-8 bg-sky-50 p-6 rounded-3xl border-4 border-sky-200">
+            <div class="text-center">
+              <div class="text-3xl sm:text-4xl bg-white p-3 rounded-2xl shadow-md border-2 border-sky-300 max-w-[220px] break-words">${items1}</div>
+              <span class="text-2xl font-black text-sky-800 mt-2 block">${part1}</span>
+            </div>
+            <span class="text-4xl font-black text-amber-500">+</span>
+            <div class="text-center">
+              <div class="text-3xl sm:text-4xl bg-white p-3 rounded-2xl shadow-md border-2 border-sky-300 max-w-[220px] break-words">${items2}</div>
+              <span class="text-2xl font-black text-sky-800 mt-2 block">${part2}</span>
+            </div>
+          </div>
+        `;
+      } else {
+        // Descomposición Simbólica (Término Faltante Parte-Parte-Todo)
+        const target = Math.floor(Math.random() * (maxVal - 4)) + 4;
+        const part1 = Math.floor(Math.random() * (target - 1)) + 1;
+        const part2 = target - part1;
+
+        state.currentAnswer = part2;
+        state.instructionText = `El total es ${target}. Si una parte es ${part1}, ¿cuál es la otra parte?`;
+        document.getElementById('question-text').innerText = state.instructionText;
+
+        document.getElementById('workspace').innerHTML = `
+          <div class="flex flex-col items-center gap-4 bg-purple-50 p-6 rounded-3xl border-4 border-purple-200">
+            <!-- Bloque Todo -->
+            <div class="bg-purple-600 text-white font-black text-4xl px-8 py-3 rounded-2xl shadow-lg">
+              Total: ${target}
+            </div>
+            <div class="text-2xl font-black text-purple-400">↙ ↘</div>
+            <!-- Bloques Partes -->
+            <div class="flex gap-6">
+              <div class="bg-white border-4 border-purple-300 text-purple-900 font-black text-3xl px-6 py-4 rounded-2xl shadow">
+                Parte 1: ${part1}
+              </div>
+              <div class="bg-amber-300 border-4 border-amber-500 text-amber-950 font-black text-3xl px-6 py-4 rounded-2xl shadow animate-pulse">
+                Parte 2: ❓
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      renderOptions(generateOptions(state.currentAnswer, maxVal));
+    }
+
+    /* --------------------------------------------------------------------------
+       NIVEL 2: OA 7 - Cálculo Mental Avanzado (Dobles, Completar 10, Conteo)
+       -------------------------------------------------------------------------- */
+    function setupOA7() {
+      const mode = Math.random();
+      const exNum = state.currentIndex + 1;
+
+      if (mode < 0.35) {
+        // Dobles y Dobles + 1
+        const isDoublePlusOne = exNum > 20 && Math.random() > 0.5;
+        const base = Math.floor(Math.random() * 8) + 1; // 1 a 8
+
+        if (!isDoublePlusOne) {
+          const target = base + base;
+          state.currentAnswer = target;
+          state.instructionText = `¿Cuánto es el doble de ${base}?`;
+          document.getElementById('question-text').innerText = state.instructionText;
+
+          document.getElementById('workspace').innerHTML = `
+            <div class="text-center space-y-3">
+              <div class="text-5xl sm:text-6xl font-black text-indigo-600 bg-indigo-50 p-6 rounded-3xl border-4 border-indigo-200 shadow-inner">
+                ${base} + ${base} = ❓
+              </div>
+              <p class="text-lg font-bold text-indigo-400">¡Estrategia de los Dobles!</p>
+            </div>
+          `;
+        } else {
+          const target = base + (base + 1);
+          state.currentAnswer = target;
+          state.instructionText = `Usa dobles: ¿Cuánto es ${base} + ${base + 1}?`;
+          document.getElementById('question-text').innerText = state.instructionText;
+
+          document.getElementById('workspace').innerHTML = `
+            <div class="text-center space-y-3">
+              <div class="text-5xl sm:text-6xl font-black text-indigo-600 bg-indigo-50 p-6 rounded-3xl border-4 border-indigo-200 shadow-inner">
+                ${base} + ${base + 1} = ❓
+              </div>
+              <p class="text-lg font-bold text-indigo-400">¡Pensamos en ${base} + ${base} y le sumamos 1!</p>
+            </div>
+          `;
+        }
+      } else if (mode < 0.7) {
+        // Completar a 10 (Estrategia)
+        const part = Math.floor(Math.random() * 8) + 1; // 1 al 8
+        const target = 10 - part;
+        state.currentAnswer = target;
+        state.instructionText = `Estrategia completar 10: ¿Cuánto le falta a ${part} para llegar a 10?`;
+        document.getElementById('question-text').innerText = state.instructionText;
+
+        document.getElementById('workspace').innerHTML = `
+          <div class="text-center space-y-3">
+            <div class="text-5xl sm:text-6xl font-black text-indigo-600 bg-indigo-50 p-6 rounded-3xl border-4 border-indigo-200 shadow-inner">
+              ${part} + ❓ = 10
+            </div>
+            <p class="text-lg font-bold text-indigo-400">¡Busca el amigo del 10!</p>
+          </div>
+        `;
+      } else {
+        // Conteo hacia adelante / atrás
+        const isForward = Math.random() > 0.5;
+        const start = isForward ? Math.floor(Math.random() * 14) + 2 : Math.floor(Math.random() * 12) + 6;
+        const step = Math.floor(Math.random() * 3) + 1; // 1, 2 o 3
+        const target = isForward ? start + step : start - step;
+
+        state.currentAnswer = target;
+        state.instructionText = isForward 
+          ? `Cuenta hacia adelante: Si estás en ${start} y avanzas ${step}, ¿a qué número llegas?`
+          : `Cuenta hacia atrás: Si estás en ${start} y retrocedes ${step}, ¿a qué número llegas?`;
+        
+        document.getElementById('question-text').innerText = state.instructionText;
+
+        document.getElementById('workspace').innerHTML = `
+          <div class="text-center space-y-3">
+            <div class="text-4xl sm:text-5xl font-black text-indigo-600 bg-indigo-50 p-6 rounded-3xl border-4 border-indigo-200 shadow-inner">
+              ${start} ${isForward ? '👉 +' + step : '👈 -' + step} = ❓
+            </div>
+            <p class="text-lg font-bold text-indigo-400">${isForward ? '¡Avanza en la recta numérica!' : '¡Retrocede en la recta numérica!'}</p>
+          </div>
+        `;
+      }
+
+      renderOptions(generateOptions(state.currentAnswer, 20));
+    }
+
+    /* --------------------------------------------------------------------------
+       NIVEL 3: OA 8 - Decenas y Unidades (Agrupamientos de a 10)
+       -------------------------------------------------------------------------- */
+    function setupOA8() {
+      const mode = Math.random();
+      const exNum = state.currentIndex + 1;
+
+      if (mode < 0.6) {
+        // Formar el número con 1 Decena + Unidades (10 a 20)
+        const units = Math.floor(Math.random() * 11); // 0 a 10
+        const target = 10 + units;
+
+        state.currentAnswer = target;
+        state.instructionText = `¿Qué número representan 1 Decena (10) y ${units} Unidades sueltas?`;
+        document.getElementById('question-text').innerText = state.instructionText;
+
+        document.getElementById('workspace').innerHTML = `
+          <div class="flex items-end gap-6 bg-amber-50 p-6 rounded-3xl border-4 border-amber-200">
+            <!-- Decena (10) -->
+            <div class="flex flex-col items-center">
+              <div class="w-8 h-36 bg-emerald-500 rounded-lg border-2 border-emerald-700 grid grid-rows-10 p-0.5 gap-0.5 shadow-md">
+                ${'<div class="bg-emerald-300 rounded-sm"></div>'.repeat(10)}
+              </div>
+              <span class="text-xs font-black text-emerald-800 mt-2">1 Decena (10)</span>
+            </div>
+
+            <span class="text-3xl font-black text-amber-500">+</span>
+
+            <!-- Unidades -->
+            <div class="flex flex-col items-center">
+              <div class="flex flex-wrap gap-1 max-w-[100px] justify-center items-end min-h-[144px]">
+                ${units === 0 ? '<span class="text-slate-400 text-sm font-bold">0 unidades</span>' : Array(units).fill(0).map(() => `<div class="w-6 h-6 bg-sky-400 border-2 border-sky-600 rounded-md shadow"></div>`).join('')}
+              </div>
+              <span class="text-xs font-black text-sky-800 mt-2">${units} Unidades</span>
+            </div>
+          </div>
+        `;
+      } else {
+        // Identificar cantidad de Unidades sueltas en un número de dos dígitos
+        const targetNumber = Math.floor(Math.random() * 10) + 11; // 11 a 20
+        const unitsPart = targetNumber - 10;
+
+        state.currentAnswer = unitsPart;
+        state.instructionText = `En el número ${targetNumber}, tenemos 1 Decena de 10. ¿Cuántas UNIDADES sueltas quedan?`;
+        document.getElementById('question-text').innerText = state.instructionText;
+
+        document.getElementById('workspace').innerHTML = `
+          <div class="flex flex-col items-center gap-4 bg-amber-50 p-6 rounded-3xl border-4 border-amber-200">
+            <div class="text-6xl font-black text-amber-600 bg-white px-8 py-4 rounded-3xl border-4 border-amber-300 shadow">
+              ${targetNumber}
+            </div>
+            <div class="flex gap-4 text-center">
+              <div class="bg-emerald-100 border-2 border-emerald-400 px-4 py-2 rounded-2xl">
+                <p class="text-xs font-bold text-emerald-800 uppercase">Decenas</p>
+                <p class="text-2xl font-black text-emerald-600">1 (10)</p>
+              </div>
+              <div class="bg-sky-100 border-2 border-sky-400 px-4 py-2 rounded-2xl animate-bounce">
+                <p class="text-xs font-bold text-sky-800 uppercase">Unidades</p>
+                <p class="text-2xl font-black text-sky-600">❓</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      renderOptions(generateOptions(state.currentAnswer, 20));
+    }
+
+    /* --------------------------------------------------------------------------
+       NIVEL 4: OA 9 - Adición, Sustracción y Problemas (0 a 20)
+       -------------------------------------------------------------------------- */
+    function setupOA9() {
+      const mode = Math.random();
+      const exNum = state.currentIndex + 1;
+      const maxRange = exNum <= 20 ? 10 : 20;
+
+      if (mode < 0.4) {
+        // Marco de 10 o Marco Doble (0 a 20)
+        const isAddition = Math.random() > 0.4;
+
+        if (isAddition) {
+          const num1 = Math.floor(Math.random() * (maxRange - 4)) + 2;
+          const num2 = Math.floor(Math.random() * (maxRange - num1)) + 1;
+          const target = num1 + num2;
+
+          state.currentAnswer = target;
+          state.instructionText = `¿Cuánto es ${num1} + ${num2}? Usa el marco para contar.`;
+          document.getElementById('question-text').innerText = state.instructionText;
+
+          const cells = Array.from({ length: 10 }, (_, i) => {
+            if (i < num1) return '<div class="w-7 h-7 sm:w-9 sm:h-9 bg-rose-500 rounded-full shadow-md"></div>';
+            if (i < target && i < 10) return '<div class="w-7 h-7 sm:w-9 sm:h-9 bg-amber-400 rounded-full shadow-md"></div>';
+            return '';
+          });
+
+          document.getElementById('workspace').innerHTML = `
+            <div class="flex flex-col items-center gap-4">
+              <div class="text-4xl font-black text-rose-600">${num1} + ${num2} = ❓</div>
+              <div class="grid grid-cols-5 gap-2 bg-slate-100 p-3 rounded-2xl border-4 border-slate-300 shadow-inner">
+                ${cells.map(c => `<div class="w-9 h-9 sm:w-11 sm:h-11 bg-white border-2 border-slate-200 rounded-xl flex items-center justify-center">${c}</div>`).join('')}
+              </div>
+            </div>
+          `;
+        } else {
+          const initial = Math.floor(Math.random() * (maxRange - 3)) + 4;
+          const remove = Math.floor(Math.random() * (initial - 1)) + 1;
+          const target = initial - remove;
+
+          state.currentAnswer = target;
+          state.instructionText = `Había ${initial} fichas y quitamos ${remove}. ¿Cuántas quedan?`;
+          document.getElementById('question-text').innerText = state.instructionText;
+
+          const cells = Array.from({ length: 10 }, (_, i) => {
+            if (i < target && i < 10) return '<div class="w-7 h-7 sm:w-9 sm:h-9 bg-rose-500 rounded-full shadow-md"></div>';
+            if (i < initial && i < 10) return '<div class="w-7 h-7 sm:w-9 sm:h-9 bg-slate-300 rounded-full flex items-center justify-center text-xs font-black text-slate-500">❌</div>';
+            return '';
+          });
+
+          document.getElementById('workspace').innerHTML = `
+            <div class="flex flex-col items-center gap-4">
+              <div class="text-4xl font-black text-rose-600">${initial} - ${remove} = ❓</div>
+              <div class="grid grid-cols-5 gap-2 bg-slate-100 p-3 rounded-2xl border-4 border-slate-300 shadow-inner">
+                ${cells.map(c => `<div class="w-9 h-9 sm:w-11 sm:h-11 bg-white border-2 border-slate-200 rounded-xl flex items-center justify-center">${c}</div>`).join('')}
+              </div>
+            </div>
+          `;
+        }
+      } else {
+        // Problemas Matemáticos Contextualizados Cotidianos
+        const problems = [
+          { name: 'Lucas', item: '🚗 autos', verbAdd: 'compra', verbSub: 'regala' },
+          { name: 'Sofía', item: '🎈 globos', verbAdd: 'encuentra', verbSub: 'revienta' },
+          { name: 'Mateo', item: '🍎 manzanas', verbAdd: 'recolecta', verbSub: 'se come' },
+          { name: 'Emma', item: '⭐️ estrellas', verbAdd: 'gana', verbSub: 'pierde' }
+        ];
+
+        const prob = problems[Math.floor(Math.random() * problems.length)];
+        const isAdd = Math.random() > 0.5;
+
+        if (isAdd) {
+          const n1 = Math.floor(Math.random() * 8) + 3;
+          const n2 = Math.floor(Math.random() * 7) + 2;
+          const target = n1 + n2;
+
+          state.currentAnswer = target;
+          state.instructionText = `${prob.name} tiene ${n1} ${prob.item} y ${prob.verbAdd} ${n2} más. ¿Cuántos tiene en total?`;
+          document.getElementById('question-text').innerText = state.instructionText;
+
+          document.getElementById('workspace').innerHTML = `
+            <div class="bg-rose-50 border-4 border-rose-200 p-6 rounded-3xl text-center space-y-3 max-w-md">
+              <span class="text-5xl">🎒</span>
+              <p class="text-2xl font-black text-rose-950">${n1} + ${n2} = ❓</p>
+              <p class="text-sm font-bold text-rose-700">¡Resuelve el problema de ${prob.name}!</p>
+            </div>
+          `;
+        } else {
+          const n1 = Math.floor(Math.random() * 10) + 7;
+          const n2 = Math.floor(Math.random() * (n1 - 2)) + 2;
+          const target = n1 - n2;
+
+          state.currentAnswer = target;
+          state.instructionText = `${prob.name} tenía ${n1} ${prob.item} y ${prob.verbSub} ${n2}. ¿Cuántos le quedan?`;
+          document.getElementById('question-text').innerText = state.instructionText;
+
+          document.getElementById('workspace').innerHTML = `
+            <div class="bg-rose-50 border-4 border-rose-200 p-6 rounded-3xl text-center space-y-3 max-w-md">
+              <span class="text-5xl">📦</span>
+              <p class="text-2xl font-black text-rose-950">${n1} - ${n2} = ❓</p>
+              <p class="text-sm font-bold text-rose-700">¡Resuelve la resta de ${prob.name}!</p>
+            </div>
+          `;
+        }
+      }
+
+      renderOptions(generateOptions(state.currentAnswer, 20));
+    }
+
+    /* ==========================================================================
+       GENERADOR DE OPCIONES DE RESPUESTA HASTA 20
+       ========================================================================== */
+    function generateOptions(correct, maxVal = 20) {
+      const opts = new Set([correct]);
+      while (opts.size < 4) {
+        let fake = correct + (Math.floor(Math.random() * 7) - 3);
+        if (fake >= 0 && fake <= maxVal && fake !== correct) {
+          opts.add(fake);
+        } else {
+          opts.add(Math.floor(Math.random() * (maxVal + 1)));
+        }
+      }
+      return Array.from(opts).sort(() => Math.random() - 0.5);
+    }
+
+    function renderOptions(optionsArr) {
+      const box = document.getElementById('options-box');
+      box.innerHTML = '';
+
+      const colors = [
+        'bg-amber-400 border-amber-600 text-amber-950',
+        'bg-emerald-400 border-emerald-600 text-emerald-950',
+        'bg-sky-400 border-sky-600 text-sky-950',
+        'bg-purple-400 border-purple-600 text-purple-950'
+      ];
+
+      optionsArr.forEach((val, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `btn-child ${colors[idx % colors.length]} font-black text-4xl sm:text-5xl py-4 sm:py-6 rounded-3xl border-b-8 active:border-b-0 flex justify-center items-center shadow-lg`;
+        btn.innerText = val;
+        btn.onclick = () => validateAnswer(val, btn);
+        box.appendChild(btn);
+      });
+    }
+
+    /* ==========================================================================
+       VALIDACIÓN DE RESPUESTA CON RACHAS
+       ========================================================================== */
+    function validateAnswer(selectedVal, btnEl) {
+      playSound('tap');
+
+      if (selectedVal === state.currentAnswer) {
+        state.streak++;
+        if (state.streak > state.maxStreak) state.maxStreak = state.streak;
+
+        // Bonificación por racha
+        const streakBonus = state.streak >= 3 ? 5 : 0;
+        state.stars += 10 + streakBonus;
+        document.getElementById('star-count').innerText = state.stars;
+
+        if (state.streak >= 3) playSound('streak');
+        else playSound('win');
+
+        triggerConfetti();
+        btnEl.classList.add('scale-110', 'ring-8', 'ring-emerald-300');
+
+        setTimeout(() => {
+          state.currentIndex++;
+
+          if (state.currentIndex >= TOTAL_EXERCISES) {
+            showVictoryScreen();
+          } else {
+            loadLevel();
+          }
+        }, 900);
+
+      } else {
+        state.streak = 0; // Reiniciar racha
+        document.getElementById('streak-box').classList.add('hidden');
+        playSound('wrong');
+        btnEl.classList.add('shake-err', 'opacity-50');
+        setTimeout(() => btnEl.classList.remove('shake-err'), 400);
+      }
+    }
+
+    /* ==========================================================================
+       PANTALLA DE VICTORIA Y REINICIO
+       ========================================================================== */
+    function showVictoryScreen() {
+      playSound('win');
+      triggerConfetti();
+      document.getElementById('game-card').classList.add('hidden');
+      document.getElementById('victory-card').classList.remove('hidden');
+      document.getElementById('total-stars').innerText = state.stars;
+
+      state.instructionText = `¡Increíble! Has superado los 50 ejercicios desafiantes. Lograste una racha máxima de ${state.maxStreak} seguidos. ¡Eres un maestro de las matemáticas!`;
+      speakInstruction();
+    }
+
+    function resetGame() {
+      state.currentIndex = 0;
+      state.stars = 0;
+      state.streak = 0;
+      state.maxStreak = 0;
+      document.getElementById('star-count').innerText = 0;
+      document.getElementById('victory-card').classList.add('hidden');
+      document.getElementById('game-card').classList.remove('hidden');
+      loadLevel();
+    }
+
+    // Iniciar el juego automáticamente al cargar la página
+    window.onload = () => {
+      loadLevel();
+    };
+  </script>
+</body>
+</html>
